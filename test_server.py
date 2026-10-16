@@ -14,6 +14,7 @@ import threading
 import unittest
 from unittest.mock import patch
 import urllib.error
+import urllib.parse
 import urllib.request
 
 import server
@@ -149,6 +150,37 @@ class LocalAPITests(unittest.TestCase):
         self.assertIn("https://example.org/pta", converted["html"])
         self.assertGreater(converted["imageCount"], 0)
         self.assert_error(400, "/api/convert?layout=unknown", self.pdf, "application/pdf")
+
+    def test_compression_download_preserves_pdf_and_reports_real_sizes(self):
+        status, headers, body = self.request("/api/compress", self.pdf, "application/pdf")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["Content-Type"], "application/pdf")
+        self.assertIn("attachment", headers["Content-Disposition"])
+        self.assertEqual(int(headers["X-Original-Bytes"]), len(self.pdf))
+        self.assertEqual(int(headers["X-Compressed-Bytes"]), len(body))
+        self.assertLessEqual(len(body), len(self.pdf))
+        self.assertAlmostEqual(float(headers["X-Compression-Ratio"]), len(body) / len(self.pdf))
+        self.assertEqual(headers["X-Page-Count"], "1")
+        self.assertEqual(headers["X-Link-Count"], "1")
+        self.assertIsInstance(json.loads(urllib.parse.unquote(headers["X-Compression-Warnings"])), list)
+        with server.pymupdf.open(stream=body, filetype="pdf") as document:
+            self.assertIn("October meeting", document[0].get_text())
+            self.assertEqual(document[0].get_links()[0]["uri"], "https://example.org/pta")
+        self.assertEqual(len(server.DOCUMENTS), 0)
+
+    def test_compression_rejects_bad_input_and_cross_site_requests(self):
+        self.assert_error(415, "/api/compress", b"{}", "application/json")
+        self.assert_error(422, "/api/compress", b"not a PDF", "application/pdf")
+        for target in ("nan", "inf", "0", "1", "1.1", "wrong"):
+            self.assert_error(400, "/api/compress?target=" + target, self.pdf, "application/pdf")
+        self.assert_error(403, "/api/compress", self.pdf, "application/pdf", {"Origin": "https://evil.example"})
+
+    def test_compression_serializes_work_and_releases_lock_on_failure(self):
+        with server.COMPRESSION_LOCK:
+            self.assert_error(429, "/api/compress", self.pdf, "application/pdf")
+        with patch.object(server, "compress_pdf", side_effect=ValueError("Cannot compress this PDF.")):
+            self.assert_error(422, "/api/compress", self.pdf, "application/pdf")
+        self.assertFalse(server.COMPRESSION_LOCK.locked())
 
     def assert_error(self, code, path, data=None, content_type=None, headers=None):
         with self.assertRaises(urllib.error.HTTPError) as raised:

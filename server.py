@@ -29,9 +29,13 @@ if not getattr(sys, "frozen", False) and (APP_DIR / ".vendor").is_dir():
 
 import pymupdf  # noqa: E402
 from converter import convert_pdf  # noqa: E402
+from compressor import compress_pdf  # noqa: E402
 
 MAX_UPLOAD = 30 * 1024 * 1024
-APP_VERSION = "1.1"
+APP_VERSION = "1.2"
+COMPRESSION_LOCK = threading.Lock()
+# MuPDF operations must not overlap across HTTP worker threads.
+PDF_LOCK = threading.Lock()
 MAX_DOCUMENTS = 3
 DOCUMENTS: OrderedDict[str, bytes] = OrderedDict()
 DOCUMENT_LOCK = threading.Lock()
@@ -381,7 +385,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._error(404, "This PDF is no longer in memory. Upload it again to see the pages.")
                 return
             try:
-                with pymupdf.open(stream=data, filetype="pdf") as document:
+                with PDF_LOCK, pymupdf.open(stream=data, filetype="pdf") as document:
                     if page_num > len(document):
                         self._error(404, "That PDF page does not exist.")
                         return
@@ -414,7 +418,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._error(400, "Choose Match PDF layout or Editable text.")
                 return
             try:
-                converted = convert_pdf(data, include_images=include_images, layout=layout)
+                with PDF_LOCK:
+                    converted = convert_pdf(data, include_images=include_images, layout=layout)
             except (ValueError, RuntimeError) as error:
                 self._error(422, str(error) or "This PDF could not be converted.")
                 return
@@ -427,6 +432,45 @@ class Handler(BaseHTTPRequestHandler):
                 while len(DOCUMENTS) > MAX_DOCUMENTS:
                     DOCUMENTS.popitem(last=False)
             self._json(200, {**converted, "id": identifier})
+        elif parsed.path == "/api/compress":
+            data = self._body("application/pdf")
+            if data is None:
+                return
+            if b"%PDF-" not in data[:1024]:
+                self._error(422, "Choose a valid PDF file.")
+                return
+            try:
+                target = float(urllib.parse.parse_qs(parsed.query).get("target", ["0.18"])[0])
+                if not 0.05 <= target < 1:
+                    raise ValueError
+            except (ValueError, OverflowError):
+                self._error(400, "The target must be at least 5% and less than 100% of the original size.")
+                return
+            if not COMPRESSION_LOCK.acquire(blocking=False):
+                self._error(429, "Another PDF is being compressed. Please try again when it finishes.")
+                return
+            try:
+                with PDF_LOCK:
+                    result = compress_pdf(data, target_ratio=target)
+            except (ValueError, RuntimeError) as error:
+                self._error(422, str(error) or "This PDF could not be compressed.")
+                return
+            except Exception:
+                self._error(500, "This PDF could not be compressed. Try another file or restart the app.")
+                return
+            finally:
+                COMPRESSION_LOCK.release()
+            self._send(
+                200, result["pdf"], "application/pdf",
+                Content_Disposition='attachment; filename="newsletter-compressed.pdf"',
+                X_Original_Bytes=str(result["originalBytes"]),
+                X_Compressed_Bytes=str(result["compressedBytes"]),
+                X_Compression_Ratio=str(result["ratio"]),
+                X_Target_Reached=str(result["targetReached"]).lower(),
+                X_Page_Count=str(result["pageCount"]),
+                X_Link_Count=str(result["linkCount"]),
+                X_Compression_Warnings=urllib.parse.quote(json.dumps(result.get("warnings", []))),
+            )
         elif parsed.path == "/api/export-eml":
             data = self._body("application/json")
             if data is None:

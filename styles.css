@@ -10,3 +10,49 @@
 .layout-row{display:flex;align-items:center;gap:9px;padding:9px 17px;border-bottom:1px solid var(--line);background:#fafcf7;flex-shrink:0;flex-wrap:wrap}.layout-row>label{font-size:10px;font-weight:600}.layout-row>select{border:1px solid #d7e2d0;background:#fff;border-radius:4px;padding:5px 7px;font-size:11px;color:#305c4a}.layout-row>span{font-size:9px;line-height:1.5;color:#7b8973;flex:1;min-width:180px}.editor-picture-toolbar{display:flex;align-items:center;gap:10px;padding:4px 16px;background:#fdfefa;border-bottom:1px solid #e6e9e1;flex-shrink:0}.editor-picture-toolbar>.tool-button{font-size:11px;font-weight:600;white-space:nowrap}.editor-picture-toolbar>span{font-size:9px;color:#8b9780;line-height:1.4}.picture-tools{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid #bfd6b2;background:#edf5e5;flex-shrink:0}.picture-tools strong{font-size:10px;margin-right:3px}.picture-tools button,.picture-tools select{border:1px solid #cbdac0;border-radius:4px;background:#fff;font-size:10px;padding:5px 7px;min-height:28px;color:#3b5e32}.picture-tools button:hover{background:#f6fbef}.picture-tools>span:last-child{display:block;width:100%;font-size:9px;color:#748569;line-height:1.5;margin-top:3px}#picture-image-controls{display:flex;align-items:center;gap:4px;flex-wrap:wrap}#picture-image-controls label{display:flex;align-items:center;gap:3px;font-size:10px}.email-document [data-selected]{outline:3px solid #6aa567;outline-offset:3px}.email-document img{cursor:grab}.email-document img:active{cursor:grabbing}.email-document table[data-pdf-page]{cursor:grab;user-select:none}.email-document table[data-pdf-page] img{user-select:none}.email-document.picture-drop-target{box-shadow:0 0 0 3px #7eaf6d}.email-document.faithful-layout{padding:0;max-width:640px;min-height:100%}.email-preview-content.faithful-layout{padding:0;max-width:640px}.email-document table[data-pdf-page]{max-width:100%!important}.email-document table[data-pdf-page] td{padding:0;line-height:0;font-size:0;vertical-align:top}.email-document table[data-pdf-page] img{display:block;border:0;border-radius:0;margin:0;max-width:100%;height:auto}.email-document table[data-pdf-page] a{display:block;line-height:0;font-size:0}.email-document.faithful-layout>p,.email-document.faithful-layout>h2,.email-document.faithful-layout>h3{margin-left:18px;margin-right:18px}.email-canvas:has(.picture-tools:not([hidden])){padding-top:15px}
 @media(max-width:680px){.email-panel{height:790px}.layout-row{padding:8px 14px}.layout-row>span{font-size:9px;min-width:100%;flex-basis:100%}.picture-tools{padding:7px 10px}.editor-picture-toolbar{padding:4px 10px}.editor-picture-toolbar>span{font-size:8px}}
 
+/* A standalone PDF attachment workflow, independent of the email editor. */
+#compression-dialog{max-width:560px;max-height:calc(100dvh - 36px);overflow:auto}
+#compression-dialog h2{margin-bottom:12px}
+#compression-dialog .dialog-description{margin-top:0;color:#6d7e68}
+.compression-target{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid #dce6d3;border-radius:8px;background:#f2f7eb;padding:13px 15px;margin:20px 0;color:#607558;font-size:10px}
+.compression-target>strong{font-size:25px;line-height:1.2;letter-spacing:-.7px;color:var(--green)}
+.compression-target small{font-size:11px;font-weight:400;letter-spacing:0}
+.compression-target>span:last-child{margin-left:auto}
+.compression-file-zone{display:flex;align-items:center;gap:11px;border:1.5px dashed #cbd8c3;border-radius:8px;padding:17px 14px;background:#fbfcf8;transition:border-color .15s,background .15s}
+.compression-file-zone.drag-over{background:#edf5e9;border-color:#6e9a7f}
+.compression-file-zone.is-busy{opacity:.65}
+.compression-file-info{flex:1;min-width:0}
+.compression-file-info strong{display:block;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.compression-file-info>span{display:block;font-size:10px;color:#819076;line-height:1.6;margin-top:4px}
+.compression-file-zone>.button{flex-shrink:0}
+.compression-help{margin-top:15px}
+.compression-progress{display:flex;align-items:center;gap:12px;font-size:12px;color:#526c48;padding:14px 0}
+.compression-progress .spinner{height:23px;width:23px;flex-shrink:0;margin:0}
+.compression-result{padding:18px 19px;background:#f2f7ed;border:1px solid #d5e4cb;border-radius:9px;margin-top:20px}
+.compression-result h3{font-size:22px;margin:0 0 18px}
+.compression-sizes{display:flex;align-items:center;gap:20px}
+.compression-sizes>div{flex:1}
+.compression-sizes>div>span{display:block;font-size:10px;color:#809174;margin-bottom:6px}
+.compression-sizes strong{display:block;font-size:21px;font-weight:600;letter-spacing:-.4px}
+.compression-arrow{font-size:22px;color:#9db08d}
+.compression-summary{font-size:12px;color:#285d3d;font-weight:600;line-height:1.7;margin:16px 0 4px}
+.compression-result .field-help{margin:4px 0 0;color:#728569}
+.compression-target-note,.compression-warnings{font-size:11px;color:#8a6a32;line-height:1.7;margin-bottom:0}
+.compression-warnings{padding-left:18px}
+#compression-dialog .dialog-actions{flex-wrap:wrap}
+#compression-error{line-height:1.6}
+@media(max-width:900px){.app-header>.local-badge{display:none}#compress-pdf-button{margin-left:auto}}
+@media(max-width:680px){
+  .app-header{gap:8px}
+  .app-header>.button{margin-left:0;white-space:nowrap;font-size:10px;padding:9px}
+  #compress-pdf-button{margin-left:auto}
+  #compression-dialog{padding:23px 19px}
+  .compression-target{gap:8px;padding:12px}
+  .compression-target>span:last-child{flex-basis:100%;margin-left:0}
+  .compression-file-zone{flex-wrap:wrap}
+  .compression-file-zone>.button{margin-left:37px}
+  .compression-sizes{gap:13px}
+  .compression-sizes strong{font-size:19px}
+}
+@media(max-width:400px){.app-header .brand-light{display:none}.app-header{padding-left:12px;padding-right:12px}.app-header>.button{padding:9px 8px}.compression-file-zone>.button{margin-left:0}}
+

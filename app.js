@@ -507,6 +507,98 @@ function downloadBlob(blob, extension) {
   anchor.href = url; anchor.download = `${($('email-subject').value || 'newsletter').replace(/[<>:"/\\|?*\x00-\x1f]/g, '-').slice(0, 120)}.${extension}`; document.body.append(anchor); anchor.click(); anchor.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
+// PDF compression has its own file and result; it never rebuilds the email draft.
+const compression = {file: null, blob: null, busy: false};
+function setCompressionFile(file) {
+  if (compression.busy) return;
+  $('compression-error').hidden = true;
+  if (!file || !(/\.pdf$/i.test(file.name) || file.type === 'application/pdf')) {
+    $('compression-error').textContent = 'Choose a PDF file to compress.'; $('compression-error').hidden = false; return;
+  }
+  if (file.size > 30 * 1024 * 1024) {
+    $('compression-error').textContent = 'This PDF is larger than 30 MB. Choose a smaller file.'; $('compression-error').hidden = false; return;
+  }
+  compression.file = file; compression.blob = null;
+  $('compression-file-name').textContent = file.name;
+  $('compression-file-detail').textContent = `${formatBytes(file.size)} · Original PDF`;
+  $('compression-result').hidden = true; $('compression-download').hidden = true;
+  $('compression-submit').hidden = false; $('compression-submit').disabled = false;
+  $('compression-use-uploaded').hidden = !state.pdf || state.pdf === file;
+}
+
+function setCompressionBusy(busy) {
+  compression.busy = busy;
+  $('compression-dialog').setAttribute('aria-busy', String(busy));
+  $('compression-progress').hidden = !busy;
+  for (const id of ['compression-choose', 'compression-input', 'compression-use-uploaded', 'compression-close']) $(id).disabled = busy;
+  $('compression-submit').disabled = busy || !compression.file || Boolean(compression.blob);
+  $('compression-submit').textContent = busy ? 'Compressing…' : 'Compress PDF';
+  $('compression-drop-zone').classList.toggle('is-busy', busy);
+}
+
+function openCompression() {
+  if (!compression.file && state.pdf) setCompressionFile(state.pdf);
+  $('compression-use-uploaded').hidden = !state.pdf || state.pdf === compression.file;
+  $('compression-dialog').showModal();
+}
+
+async function compressPdf(event) {
+  event.preventDefault();
+  if (!compression.file || compression.busy) return;
+  $('compression-error').hidden = true; $('compression-result').hidden = true; $('compression-download').hidden = true;
+  compression.blob = null;
+  setCompressionBusy(true);
+  try {
+    const response = await fetch('/api/compress?target=0.18', {method: 'POST', headers: {'Content-Type': 'application/pdf'}, body: compression.file});
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'The PDF could not be compressed. Please try again.');
+    }
+    const blob = await response.blob();
+    if (!blob.size) throw new Error('The compressed PDF was empty. Please try another file.');
+    const originalBytes = Number(response.headers.get('X-Original-Bytes')) || compression.file.size;
+    const compressedBytes = blob.size;
+    const ratio = compressedBytes / originalBytes;
+    const percentage = Math.min(100, ratio * 100);
+    const targetReached = response.headers.get('X-Target-Reached') === 'true';
+    const pageCount = Number(response.headers.get('X-Page-Count')) || 0;
+    const linkCount = Number(response.headers.get('X-Link-Count')) || 0;
+    let warnings = [];
+    try { const value = JSON.parse(decodeURIComponent(response.headers.get('X-Compression-Warnings') || '%5B%5D')); if (Array.isArray(value)) warnings = value.filter((item) => typeof item === 'string'); } catch { /* Size and download remain available if optional details are missing. */ }
+    compression.blob = blob;
+    $('compression-original-size').textContent = formatBytes(originalBytes);
+    $('compression-new-size').textContent = formatBytes(compressedBytes);
+    $('compression-summary').textContent = `${percentage.toFixed(1)}% of the original · ${Math.max(0, (1 - ratio) * 100).toFixed(1)}% smaller`;
+    $('compression-result-title').textContent = compressedBytes < originalBytes ? 'Your smaller PDF is ready.' : 'Your PDF is already compact.';
+    $('compression-preserved').textContent = `${pageCount} page${pageCount === 1 ? '' : 's'} · ${linkCount} clickable link${linkCount === 1 ? '' : 's'} preserved`;
+    $('compression-target-note').hidden = targetReached;
+    $('compression-target-note').textContent = 'This PDF could not reach 18% while keeping a usable picture quality. This is the smallest version found.';
+    $('compression-warnings').replaceChildren(...warnings.map((message) => { const item = document.createElement('li'); item.textContent = message; return item; }));
+    $('compression-warnings').hidden = !warnings.length;
+    $('compression-result').hidden = false; $('compression-download').hidden = false; $('compression-submit').hidden = true;
+  } catch (error) {
+    $('compression-error').textContent = error.message || 'The PDF could not be compressed. Please try again.';
+    $('compression-error').hidden = false;
+  } finally { setCompressionBusy(false); }
+}
+
+$('compress-pdf-button').addEventListener('click', openCompression);
+$('compression-choose').addEventListener('click', () => { if (!compression.busy) $('compression-input').click(); });
+$('compression-input').addEventListener('change', (event) => { const file = event.target.files[0]; event.target.value = ''; if (file) setCompressionFile(file); });
+$('compression-use-uploaded').addEventListener('click', () => { if (state.pdf) setCompressionFile(state.pdf); });
+$('compression-form').addEventListener('submit', compressPdf);
+$('compression-dialog').addEventListener('cancel', (event) => { if (compression.busy) event.preventDefault(); });
+for (const name of ['dragenter', 'dragover']) $('compression-drop-zone').addEventListener(name, (event) => { event.preventDefault(); event.stopPropagation(); if (!compression.busy) $('compression-drop-zone').classList.add('drag-over'); });
+for (const name of ['dragleave', 'drop']) $('compression-drop-zone').addEventListener(name, (event) => { event.preventDefault(); event.stopPropagation(); $('compression-drop-zone').classList.remove('drag-over'); });
+$('compression-drop-zone').addEventListener('drop', (event) => { if (!compression.busy && event.dataTransfer.files[0]) setCompressionFile(event.dataTransfer.files[0]); });
+$('compression-download').addEventListener('click', () => {
+  if (!compression.blob || !compression.file) return;
+  const url = URL.createObjectURL(compression.blob); const anchor = document.createElement('a');
+  const stem = compression.file.name.replace(/\.pdf$/i, '').replace(/[<>:"/\\|?*\x00-\x1f]/g, '-').slice(0, 120) || 'newsletter';
+  anchor.href = url; anchor.download = `${stem}-compressed.pdf`; document.body.append(anchor); anchor.click(); anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+});
+
 $('drop-zone').addEventListener('click', () => { if (!state.busy) $('pdf-input').click(); });
 $('drop-zone').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('pdf-input').click(); } });
 $('replace-button').addEventListener('click', () => $('pdf-input').click());

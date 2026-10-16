@@ -20,6 +20,12 @@ The source-code launcher **Start Newsletter App.cmd** is also available for deve
 
 Choose **Export → Email HTML (.html)** to keep an editable email version you can reopen in a browser or reuse later. Images in the downloaded HTML are embedded in the file. Keep a local copy before closing or refreshing the app if you want to preserve edits.
 
+## Make a smaller PDF attachment
+
+Click **Compress PDF** at the top of the app. Choose a PDF, or use the PDF already uploaded in the email workspace. Click **Compress PDF**, review the actual before/after sizes, then choose **Download compressed PDF** and attach that file to your email.
+
+The target is **18% of the original size (82% smaller)**. Compression reduces picture resolution and JPEG quality while preserving PDF text, page layout, and clickable link annotations. A compressed file remains a PDF. Some files are already optimized or contain mostly text, so the target cannot always be reached; the app shows the actual result. The original file and any email edits are kept. Compression runs locally and accepts PDFs up to 30 MB.
+
 ## What to expect
 
 - PDF text, many text styles, hyperlinks, and optional compressed pictures are converted to email-friendly HTML.
@@ -55,7 +61,7 @@ Run the backend regression checks with `python -m unittest test_server.py`.
 
 ## Application files
 
-Keep `server.py`, `converter.py`, `index.html`, `app.js`, `styles.css`, `requirements.txt`, and the launcher together. The `.vendor` folder is optional when the dependencies in `requirements.txt` are installed in the Python environment you use.
+Keep `server.py`, `converter.py`, `compressor.py`, `index.html`, `app.js`, `styles.css`, `requirements.txt`, and the launcher together. The `.vendor` folder is optional when the dependencies in `requirements.txt` are installed in the Python environment you use.
 
 ## Rebuild the Windows executable
 

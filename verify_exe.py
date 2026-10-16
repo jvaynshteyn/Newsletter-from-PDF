@@ -12,6 +12,9 @@ import tempfile
 import time
 from urllib.request import Request, urlopen
 
+sys.path.insert(0, str(Path(__file__).resolve().parent / ".vendor"))
+import pymupdf
+
 executable = Path(sys.argv[1]).resolve()
 with executable.open("rb") as stream:
     stream.seek(0x3c)
@@ -28,10 +31,11 @@ environment = dict(os.environ)
 for name in ("PYTHONPATH", "PYTHONHOME", "NEWSLETTER_SAMPLE"):
     environment.pop(name, None)
 
-def request(path, body=None, content_type=None):
+def request(path, body=None, content_type=None, *, with_headers=False):
     headers = {"Content-Type": content_type} if content_type else {}
-    with urlopen(Request(base + path, data=body, headers=headers), timeout=20) as response:
-        return response.read()
+    with urlopen(Request(base + path, data=body, headers=headers), timeout=120) as response:
+        data = response.read()
+        return (data, response.headers) if with_headers else data
 
 with tempfile.TemporaryDirectory(prefix="newsletter-exe-check-") as unrelated_directory:
     process = subprocess.Popen([str(executable), "--smoke-test", "--no-browser", "--port", str(port)], cwd=unrelated_directory, env=environment, creationflags=subprocess.CREATE_NO_WINDOW)
@@ -54,7 +58,21 @@ with tempfile.TemporaryDirectory(prefix="newsletter-exe-check-") as unrelated_di
         print("PASS: packaged runtime and web assets load from an unrelated folder", flush=True)
         sample = request("/api/sample")
         assert sample.startswith(b"%PDF-")
-        assert health["version"] == "1.1"
+        assert health["version"] == "1.2"
+        compressed, headers = request("/api/compress?target=0.18", sample, "application/pdf", with_headers=True)
+        assert len(compressed) <= len(sample) * .18
+        assert headers["X-Target-Reached"] == "true"
+        assert int(headers["X-Original-Bytes"]) == len(sample)
+        assert int(headers["X-Compressed-Bytes"]) == len(compressed)
+        with pymupdf.open(stream=sample, filetype="pdf") as original, pymupdf.open(stream=compressed, filetype="pdf") as smaller:
+            assert len(smaller) == len(original) == 3
+            for page, result_page in zip(original, smaller):
+                assert page.rect == result_page.rect
+                assert page.get_text() == result_page.get_text()
+                before_links = [(link["kind"], tuple(link["from"]), link.get("uri")) for link in page.get_links()]
+                after_links = [(link["kind"], tuple(link["from"]), link.get("uri")) for link in result_page.get_links()]
+                assert before_links == after_links
+        print(f"PASS: packaged compression makes {len(compressed):,}-byte PDF ({len(compressed)/len(sample):.1%}), retaining all text and clickable links", flush=True)
         result = json.loads(request("/api/convert?layout=faithful", sample, "application/pdf"))
         assert result["pageCount"] == 3
         assert result["stats"]["annotationLinkCount"] == 3

@@ -12,6 +12,7 @@
   <header class="app-header">
     <a class="brand" href="/" aria-label="Newsletter Studio home"><span class="brand-icon" aria-hidden="true">✉</span><span>Newsletter<span class="brand-light"> Studio</span></span></a>
     <span class="local-badge"><span></span> Runs on your computer</span>
+    <button class="button" id="compress-pdf-button" type="button">Compress PDF <span aria-hidden="true">↓</span></button>
     <button class="button primary" id="copy-button" disabled><span aria-hidden="true">▣</span> Copy email</button>
   </header>
 
@@ -59,9 +60,36 @@
   </main>
   <input type="file" id="pdf-input" accept="application/pdf,.pdf" hidden>
   <input type="file" id="picture-input" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp" multiple hidden>
+  <input type="file" id="compression-input" accept="application/pdf,.pdf" hidden>
   <div id="busy-overlay" class="busy-overlay" hidden><div class="busy-card"><div class="spinner"></div><h2>Making room in their inbox.</h2><p id="busy-message">Reading your newsletter and preserving its links…</p></div></div>
   <dialog id="link-dialog"><form id="link-form"><div class="dialog-eyebrow">A CLICK IN THE RIGHT DIRECTION</div><h2 id="link-dialog-title">Add a link</h2><label for="link-label">Text to display</label><input id="link-label" required maxlength="500"><label for="link-url">Link address</label><input id="link-url" type="text" placeholder="https://example.com" required><p class="field-help">Use a website, mailto: email address, or tel: phone link.</p><p id="link-error" class="field-error" hidden></p><div class="dialog-actions"><button type="button" class="text-button danger" id="remove-link" hidden>Remove link</button><span></span><button type="button" class="button" data-close="link-dialog">Cancel</button><button type="submit" class="button primary">Save link</button></div></form></dialog>
   <dialog id="export-dialog"><div class="dialog-eyebrow">READY TO SEND</div><h2>Take your email with you.</h2><p class="dialog-description">Your edits and clickable links go with it.</p><button class="export-option" id="export-eml"><span class="export-icon">✉</span><span><strong>Outlook email draft <small>.eml</small></strong><span>Embeds pictures as email attachments. Open in a compatible email app.</span></span><b>↓</b></button><button class="export-option" id="export-html"><span class="export-icon">&lt;/&gt;</span><span><strong>Email HTML <small>.html</small></strong><span>A portable copy with pictures and inline email formatting.</span></span><b>↓</b></button><div class="dialog-actions"><button type="button" class="button" data-close="export-dialog">Done</button></div></dialog>
+  <dialog id="compression-dialog" aria-labelledby="compression-title" aria-describedby="compression-description">
+    <form id="compression-form">
+      <div class="dialog-eyebrow">A LIGHTER ATTACHMENT</div>
+      <h2 id="compression-title">Compress your PDF.</h2>
+      <p id="compression-description" class="dialog-description">Make a smaller PDF to attach to an email. Clickable links, text, and the page layout stay in the PDF.</p>
+      <div class="compression-target"><span>Target size</span><strong>18% <small>of the original</small></strong><span>About 82% smaller</span></div>
+      <div id="compression-drop-zone" class="compression-file-zone">
+        <span class="file-icon" aria-hidden="true">PDF</span>
+        <div class="compression-file-info"><strong id="compression-file-name">Choose a PDF to compress</strong><span id="compression-file-detail">Drop it here, or choose a file up to 30 MB.</span></div>
+        <button id="compression-choose" type="button" class="button small">Choose PDF</button>
+      </div>
+      <button type="button" id="compression-use-uploaded" class="text-button" hidden>Use the PDF in the workspace</button>
+      <p class="field-help compression-help">Pictures are optimized to reduce file size. The actual size depends on the PDF; some files are already compressed. Your original file is kept.</p>
+      <div id="compression-progress" class="compression-progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><span>Optimizing pictures and preserving your links…</span></div>
+      <p id="compression-error" class="field-error" role="alert" hidden></p>
+      <section id="compression-result" class="compression-result" aria-labelledby="compression-result-title" aria-live="polite" hidden>
+        <h3 id="compression-result-title">Your smaller PDF is ready.</h3>
+        <div class="compression-sizes"><div><span>Original</span><strong id="compression-original-size"></strong></div><span class="compression-arrow" aria-hidden="true">→</span><div><span>Compressed</span><strong id="compression-new-size"></strong></div></div>
+        <p id="compression-summary" class="compression-summary"></p>
+        <p id="compression-preserved" class="field-help"></p>
+        <p id="compression-target-note" class="compression-target-note" hidden></p>
+        <ul id="compression-warnings" class="compression-warnings" hidden></ul>
+      </section>
+      <div class="dialog-actions"><button type="button" id="compression-close" class="button" data-close="compression-dialog">Done</button><button type="submit" id="compression-submit" class="button primary" disabled>Compress PDF</button><button type="button" id="compression-download" class="button primary" hidden>Download compressed PDF <span aria-hidden="true">↓</span></button></div>
+    </form>
+  </dialog>
   <dialog id="confirm-dialog"><h2 id="confirm-title">Reset your email?</h2><p id="confirm-message" class="dialog-description">This restores the original conversion and replaces your edits.</p><div class="dialog-actions"><button type="button" class="button" id="confirm-cancel">Keep editing</button><button type="button" class="button primary" id="confirm-yes">Reset email</button></div></dialog>
 </body>
 </html>
