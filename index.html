@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#174f46">
+  <title>Newsletter Studio · PDF to email</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="/" aria-label="Newsletter Studio home"><span class="brand-icon" aria-hidden="true">✉</span><span>Newsletter<span class="brand-light"> Studio</span></span></a>
+    <span class="local-badge"><span></span> Runs on your computer</span>
+    <button class="button primary" id="copy-button" disabled><span aria-hidden="true">▣</span> Copy email</button>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div><div class="eyebrow">A LITTLE LESS ATTACHMENT. A LOT MORE CONNECTION.</div><h1>Your PDF. Ready for their inbox.</h1><p>Turn a newsletter into an editable email, with its links intact.</p></div>
+      <ol class="steps" aria-label="How it works"><li class="current"><b>1</b> Add PDF</li><li><b>2</b> Make it yours</li><li><b>3</b> Copy &amp; paste</li></ol>
+    </section>
+
+    <div id="notice" class="notice" role="status" hidden></div>
+    <section class="workspace" aria-label="Newsletter workspace">
+      <section class="panel source-panel" aria-labelledby="source-title">
+        <div class="panel-heading"><div class="panel-title"><span class="panel-number">01</span><h2 id="source-title">Original PDF</h2></div><span class="pill">SOURCE</span></div>
+        <div class="source-meta"><div class="file-info"><span class="file-icon" aria-hidden="true">PDF</span><div><strong id="source-name">A good email starts here</strong><span id="source-detail">Upload your newsletter to get started</span></div></div><button id="replace-button" class="button small" hidden>Replace</button></div>
+        <div class="source-toolbar" id="source-toolbar" hidden><div class="page-navigation"><button class="icon-button" id="previous-page" aria-label="Previous PDF page">‹</button><span id="page-label">Page 1 of 1</span><button class="icon-button" id="next-page" aria-label="Next PDF page">›</button></div><div class="viewer-options"><label><input id="show-links" type="checkbox"> Show links</label><select id="zoom" aria-label="PDF zoom"><option value="fit">Fit width</option><option value="100">100%</option><option value="125">125%</option></select></div></div>
+        <div id="pdf-viewer" class="pdf-viewer">
+          <div class="upload-zone" id="drop-zone" tabindex="0" role="button" aria-label="Choose a PDF newsletter, or drop a PDF here">
+            <div class="paper-illustration" aria-hidden="true"><div class="paper-corner"></div><span>YOUR NEXT<br>GREAT EMAIL.</span><div class="paper-line long"></div><div class="paper-line"></div><div class="paper-picture">✦</div><div class="paper-line long"></div><div class="paper-line"></div><div class="paper-link">a link worth clicking ↗</div></div>
+            <h3>Drop your newsletter here</h3><p>A PDF with text, pictures, and clickable links.<br>We’ll turn it into something you can send.</p><span class="button primary">Choose a PDF <span aria-hidden="true">↑</span></span><span class="file-limit">PDF files up to 30 MB</span>
+          </div>
+          <div class="sample-callout" id="sample-callout"><span>Have a look around first.</span><button class="text-button" id="sample-button">Try your October newsletter <span aria-hidden="true">↗</span></button></div>
+          <div id="pdf-pages" hidden></div>
+        </div>
+        <div class="panel-footer"><span class="privacy-dot"></span><span>Your PDF stays on this computer.</span><a id="view-original" href="#" target="_blank" rel="noopener" hidden>Open original ↗</a></div>
+      </section>
+
+      <section class="panel email-panel" aria-labelledby="email-title">
+        <div class="panel-heading"><div class="panel-title"><span class="panel-number">02</span><h2 id="email-title">Email workspace</h2></div><span class="pill green" id="editable-badge">EDITABLE</span></div>
+        <div class="email-controls"><div class="tabs" role="tablist" aria-label="Email workspace view"><button class="tab active" id="edit-tab" role="tab" aria-selected="true" aria-controls="edit-view" data-view="edit">Edit email</button><button class="tab" id="preview-tab" role="tab" aria-selected="false" aria-controls="preview-view" data-view="preview">Preview</button><button class="tab" id="links-tab" role="tab" aria-selected="false" aria-controls="links-view" data-view="links">Links <span id="link-count">0</span></button></div><label class="image-toggle"><input type="checkbox" id="include-images" checked><span>Include pictures</span></label></div>
+        <div class="layout-row"><label for="conversion-layout">Email layout</label><select id="conversion-layout"><option value="faithful">Match PDF layout</option><option value="editable">Editable text</option></select><span id="layout-help">Preserves the complete design and clickable links. Add or move pictures around each page.</span></div>
+        <div class="subject-row"><label for="email-subject">SUBJECT</label><input id="email-subject" placeholder="Your newsletter subject line" disabled maxlength="250"><span id="draft-state">Waiting for PDF</span></div>
+        <div id="edit-view" class="email-view" role="tabpanel" aria-labelledby="edit-tab">
+          <div class="editor-toolbar" role="toolbar" aria-label="Email formatting"><button class="tool-button" data-command="undo" aria-label="Undo" title="Undo">↶</button><button class="tool-button" data-command="redo" aria-label="Redo" title="Redo">↷</button><span class="toolbar-divider"></span><select id="block-format" aria-label="Text style"><option value="p">Paragraph</option><option value="h2">Heading</option><option value="h3">Subheading</option></select><span class="toolbar-divider"></span><button class="tool-button" data-command="bold" aria-label="Bold" title="Bold (Ctrl+B)"><b>B</b></button><button class="tool-button italic" data-command="italic" aria-label="Italic" title="Italic (Ctrl+I)">I</button><button class="tool-button underline" data-command="underline" aria-label="Underline" title="Underline (Ctrl+U)">U</button><button class="tool-button" data-command="insertUnorderedList" aria-label="Bullet list" title="Bullet list">☷</button><button class="tool-button" data-command="justifyLeft" aria-label="Align left" title="Align left">≡</button><button class="tool-button" data-command="justifyCenter" aria-label="Center" title="Center">☰</button><span class="toolbar-divider"></span><button class="tool-button link-tool" id="insert-link" aria-label="Insert or edit link" title="Insert or edit a link">↗ <span>Link</span></button><button class="tool-button" data-command="removeFormat" aria-label="Clear formatting" title="Clear formatting">T<span class="clear-mark">×</span></button></div>
+          <div class="editor-picture-toolbar"><button class="tool-button" id="add-picture" disabled>▧ Add picture</button><span>Paste with Ctrl+V, drop a picture, or select one to move it.</span></div>
+          <div class="picture-tools" id="picture-tools" role="toolbar" aria-label="Selected picture controls" hidden><strong id="picture-selection-label">Picture</strong><button id="picture-earlier" type="button">Move earlier</button><button id="picture-later" type="button">Move later</button><span id="picture-image-controls"><button type="button" data-picture-align="left">Left</button><button type="button" data-picture-align="center">Center</button><button type="button" data-picture-align="right">Right</button><label>Width <select id="picture-width" aria-label="Picture width"><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="100">100%</option></select></label></span><button id="picture-remove" type="button">Remove</button><button id="picture-done" type="button" aria-label="Close picture controls">Done</button><span id="picture-help"></span></div>
+          <div class="email-canvas" id="edit-canvas"><div id="email-editor" class="email-document" contenteditable="false" role="textbox" aria-label="Editable email body" aria-multiline="true" spellcheck="true"><div class="email-placeholder"><span class="placeholder-envelope" aria-hidden="true">✉</span><h3>A newsletter they can click.</h3><p>Your email will appear here, ready to edit.<br>Keep the message. Keep the links.<br>Leave the oversized attachment behind.</p><div class="placeholder-lines" aria-hidden="true"><i></i><i></i><i></i></div></div></div></div>
+        </div>
+        <div id="preview-view" class="email-view" role="tabpanel" aria-labelledby="preview-tab" hidden><div class="preview-toolbar"><span>How your message will read</span><div class="segmented"><button id="desktop-preview" class="selected" aria-pressed="true">Desktop</button><button id="mobile-preview" aria-pressed="false">Mobile</button></div></div><div class="email-canvas preview-canvas"><div id="email-preview" class="email-preview-content" role="article" aria-label="Email preview"></div></div></div>
+        <div id="links-view" class="email-view" role="tabpanel" aria-labelledby="links-tab" hidden><div class="links-intro"><h3>Every connection, accounted for.</h3><p>Check the links in your edited email. Select a link in the editor to change its destination.</p></div><div id="links-list" class="links-list"><p class="muted">Your newsletter links will appear here.</p></div></div>
+        <div class="email-footer"><div><strong id="email-size">Ready when you are</strong><span id="email-stats">Text and links, made for an inbox.</span></div><div class="export-actions"><button class="text-button" id="reset-button" disabled>Reset</button><button class="button small" id="download-button" disabled>Export <span aria-hidden="true">↓</span></button></div></div>
+      </section>
+    </section>
+
+    <footer class="workspace-note"><span><b>One last step:</b> copy, then paste into a new email using Ctrl+V. Links stay clickable.</span><span>Pictures paste differently across email apps. Export an Outlook draft to embed them.</span></footer>
+  </main>
+  <input type="file" id="pdf-input" accept="application/pdf,.pdf" hidden>
+  <input type="file" id="picture-input" accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp" multiple hidden>
+  <div id="busy-overlay" class="busy-overlay" hidden><div class="busy-card"><div class="spinner"></div><h2>Making room in their inbox.</h2><p id="busy-message">Reading your newsletter and preserving its links…</p></div></div>
+  <dialog id="link-dialog"><form id="link-form"><div class="dialog-eyebrow">A CLICK IN THE RIGHT DIRECTION</div><h2 id="link-dialog-title">Add a link</h2><label for="link-label">Text to display</label><input id="link-label" required maxlength="500"><label for="link-url">Link address</label><input id="link-url" type="text" placeholder="https://example.com" required><p class="field-help">Use a website, mailto: email address, or tel: phone link.</p><p id="link-error" class="field-error" hidden></p><div class="dialog-actions"><button type="button" class="text-button danger" id="remove-link" hidden>Remove link</button><span></span><button type="button" class="button" data-close="link-dialog">Cancel</button><button type="submit" class="button primary">Save link</button></div></form></dialog>
+  <dialog id="export-dialog"><div class="dialog-eyebrow">READY TO SEND</div><h2>Take your email with you.</h2><p class="dialog-description">Your edits and clickable links go with it.</p><button class="export-option" id="export-eml"><span class="export-icon">✉</span><span><strong>Outlook email draft <small>.eml</small></strong><span>Embeds pictures as email attachments. Open in a compatible email app.</span></span><b>↓</b></button><button class="export-option" id="export-html"><span class="export-icon">&lt;/&gt;</span><span><strong>Email HTML <small>.html</small></strong><span>A portable copy with pictures and inline email formatting.</span></span><b>↓</b></button><div class="dialog-actions"><button type="button" class="button" data-close="export-dialog">Done</button></div></dialog>
+  <dialog id="confirm-dialog"><h2 id="confirm-title">Reset your email?</h2><p id="confirm-message" class="dialog-description">This restores the original conversion and replaces your edits.</p><div class="dialog-actions"><button type="button" class="button" id="confirm-cancel">Keep editing</button><button type="button" class="button primary" id="confirm-yes">Reset email</button></div></dialog>
+</body>
+</html>

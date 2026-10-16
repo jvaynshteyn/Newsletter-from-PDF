@@ -1,0 +1,12 @@
+.vendor/
+.venv/
+__pycache__/
+tmp/
+*.log
+*.eml
+newsletter-preview.jpg
+.build-tools/
+.pyinstaller-cache/
+build/
+dist/
+*.spec
